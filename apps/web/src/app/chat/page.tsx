@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/loading-indicator';
 import { TextChatInterface } from '@/components/chat/text-chat-interface';
 import { VideoChatInterface } from '@/components/video/video-chat-interface';
-import { ArrowLeft, Zap, Video } from 'lucide-react';
+import { ArrowLeft, Zap, Video, ShieldAlert } from 'lucide-react';
 
 function ChatSetupContent() {
   const searchParams = useSearchParams();
@@ -69,6 +69,25 @@ function ChatSetupContent() {
           />
         </div>
       )}
+
+      {/* Safety & Help Footer Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-surface-500 pt-2 border-t border-surface-850">
+        <div className="flex items-center gap-1.5 text-surface-400">
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+          <span>Strictly 18+ platform. Treat partners with respect.</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/safety" className="hover:text-surface-300 transition-colors">
+            Safety Center
+          </Link>
+          <Link href="/terms" className="hover:text-surface-300 transition-colors">
+            Terms & Guidelines
+          </Link>
+          <Link href="/privacy" className="hover:text-surface-300 transition-colors">
+            Privacy Policy
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

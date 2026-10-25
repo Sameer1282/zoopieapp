@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { CreateBlockRequestSchema } from '@zoopie/shared';
 import { ValidationError } from '../utils/errors.js';
 import { prisma, withDbTimeout } from '../db/client.js';
+import { matchmakingQueue } from '../socket/matchmaking-queue.js';
 import { logger } from '../utils/logger.js';
 import crypto from 'node:crypto';
 
@@ -15,6 +16,9 @@ blocksRouter.post('/api/blocks', async (req: Request, res: Response, next: NextF
     }
 
     const { blockerSessionId, blockedFingerprint, reason } = parseResult.data;
+
+    // Immediately record block in active matchmaking memory
+    matchmakingQueue.recordBlock(blockerSessionId, blockedFingerprint);
 
     let blockId: string = crypto.randomUUID();
     const createdAt = new Date();

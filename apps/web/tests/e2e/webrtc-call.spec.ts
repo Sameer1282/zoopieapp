@@ -73,4 +73,3 @@ test.describe('Phase 6: WebRTC Two-Client Video & Audio Call', () => {
     await context2.close();
   });
 });
-

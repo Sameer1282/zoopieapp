@@ -131,6 +131,28 @@ export default function SafetyPage() {
             data with strangers.
           </p>
         </Card>
+
+        <Card className="border-surface-800 bg-surface-900/80 p-6 sm:p-8 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-white">
+                5. Reporting & Moderation Process
+              </h2>
+              <span className="text-xs text-surface-400">Fair and auditable enforcement</span>
+            </div>
+          </div>
+          <p className="text-sm text-surface-300 leading-relaxed">
+            When you report a participant, our backend securely registers the event, reason, and
+            transient session identifiers. Reports are placed into an administrative review queue
+            where trained moderators review context and enforce server-authoritative actions
+            including warnings, 24-hour timeouts, or permanent bans. Every enforcement action is
+            recorded in an immutable audit log to maintain transparency and prevent arbitrary
+            decisions.
+          </p>
+        </Card>
       </div>
     </div>
   );

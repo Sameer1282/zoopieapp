@@ -34,7 +34,11 @@ import {
   ChevronDown,
   ChevronUp,
   Camera,
+  Flag,
+  Ban,
 } from 'lucide-react';
+import { TermsAgreementModal, TERMS_STORAGE_KEY } from '@/components/safety/terms-agreement-modal';
+import { ReportDialog } from '@/components/safety/report-dialog';
 
 export type VideoCallConnectionState =
   | 'permission-gate'
@@ -80,6 +84,20 @@ export function VideoChatInterface({
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  // Check 18+ Terms Agreement on initial mount
+  useEffect(() => {
+    try {
+      const accepted = localStorage.getItem(TERMS_STORAGE_KEY);
+      if (!accepted) {
+        setIsTermsOpen(true);
+      }
+    } catch {
+      // Storage fallback
+    }
+  }, []);
 
   // Diagnostic panel toggle
   const [showDiagnostics, setShowDiagnostics] = useState(false);
@@ -489,6 +507,32 @@ export function VideoChatInterface({
     }
   };
 
+  // Block: records block, ends call immediately and skips
+  const handleBlockPeer = async () => {
+    if (
+      typeof window !== 'undefined' &&
+      window.confirm(
+        'Block this participant? You will immediately leave this video call and will not be matched with them again.'
+      )
+    ) {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        await fetch(`${apiUrl}/api/blocks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blockerSessionId: sessionId,
+            blockedFingerprint: matchId,
+            reason: 'User blocked during video call',
+          }),
+        });
+      } catch {
+        // Block API fallback
+      }
+      handleSkip();
+    }
+  };
+
   return (
     <div className="space-y-4 max-w-4xl mx-auto">
       {/* 1. Pre-call Deliberate Permission Gate */}
@@ -601,6 +645,26 @@ export function VideoChatInterface({
               >
                 <Square className="h-3 w-3" />
                 <span>Stop</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsReportOpen(true)}
+                className="h-8 text-xs px-2.5 gap-1 text-surface-400 hover:text-amber-400"
+                title="Report participant"
+              >
+                <Flag className="h-3 w-3 text-amber-400" />
+                <span className="hidden sm:inline">Report</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleBlockPeer}
+                className="h-8 text-xs px-2.5 gap-1 text-surface-400 hover:text-red-400"
+                title="Block participant"
+              >
+                <Ban className="h-3 w-3 text-red-400" />
+                <span className="hidden sm:inline">Block</span>
               </Button>
             </div>
           </div>
@@ -720,6 +784,26 @@ export function VideoChatInterface({
           )}
         </Card>
       )}
+
+      {/* Safety & Reporting Dialogs */}
+      <ReportDialog
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        reporterSessionId={sessionId}
+        reportedSessionId={matchId}
+        conversationId={matchId}
+        onBlockPeer={handleSkip}
+      />
+
+      <TermsAgreementModal
+        isOpen={isTermsOpen}
+        onAccept={() => setIsTermsOpen(false)}
+        onDecline={() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = '/';
+          }
+        }}
+      />
     </div>
   );
 }

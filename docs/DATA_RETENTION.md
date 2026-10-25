@@ -32,3 +32,20 @@ Zoopie is engineered around an uncompromising architectural boundary:
 2. **Zero Plaintext Credentials**:
    - Administrative users authenticate with passwords hashed using **Argon2id**.
    - No secret keys or database credentials are ever delivered to client web bundles.
+
+---
+
+## 4. Report Lifecycle & Deletion Procedures
+
+1. **Abuse Reports (90 Days)**:
+   - When an abuse report is filed, it is stored in `abuse_reports` with status `PENDING`.
+   - Once resolved, dismissed, or expired after 90 days, automated database pruning permanently hard-deletes the report record.
+   - Reporter and reported session references are purged.
+
+2. **Moderation Audit Records (1 Year)**:
+   - Moderation actions (`moderation_actions`) are retained for 1 year to satisfy regulatory compliance and ensure staff accountability.
+   - Records contain anonymized target fingerprints and reasons. After 365 days, records are pruned.
+
+3. **Data Subject Deletion Requests**:
+   - Users wishing to exercise their "Right to be Forgotten" (GDPR Art. 17 / CCPA) can submit their session ID.
+   - Because ordinary text and media are never stored (0-second retention), there is no private communication data to delete. Any associated transient blocks or report references tied to that session ID will be purged within 30 days upon request.

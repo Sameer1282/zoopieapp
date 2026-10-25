@@ -36,7 +36,11 @@ import {
   Square,
   AlertCircle,
   Zap,
+  Flag,
+  Ban,
 } from 'lucide-react';
+import { TermsAgreementModal, TERMS_STORAGE_KEY } from '@/components/safety/terms-agreement-modal';
+import { ReportDialog } from '@/components/safety/report-dialog';
 
 export type MatchmakingUIState =
   | 'idle'
@@ -102,6 +106,20 @@ export function TextChatInterface({
   const [inputValue, setInputValue] = useState('');
   const [peerTyping, setPeerTyping] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  // Check 18+ Terms Agreement on initial mount
+  useEffect(() => {
+    try {
+      const accepted = localStorage.getItem(TERMS_STORAGE_KEY);
+      if (!accepted) {
+        setIsTermsOpen(true);
+      }
+    } catch {
+      // Storage access fallback
+    }
+  }, []);
 
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -389,6 +407,41 @@ export function TextChatInterface({
     }, 200);
   };
 
+  // Action: Block current participant
+  const handleBlockPeer = async () => {
+    if (
+      typeof window !== 'undefined' &&
+      window.confirm(
+        'Block this participant? You will immediately leave this chat and will not be matched with them again.'
+      )
+    ) {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        await fetch(`${apiUrl}/api/blocks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blockerSessionId: sessionId,
+            blockedFingerprint: matchId,
+            reason: 'User blocked during chat',
+          }),
+        });
+      } catch {
+        // Block API fallback
+      }
+      handleSkip();
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `sys-block-${Date.now()}`,
+          content: 'Participant blocked. You will not be paired with them again.',
+          sender: 'system',
+          timestamp: Date.now(),
+        },
+      ]);
+    }
+  };
+
   // Input typing handler
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -520,6 +573,26 @@ export function TextChatInterface({
               >
                 <Square className="h-3 w-3 text-coral-400" />
                 <span>Stop</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsReportOpen(true)}
+                className="h-8 text-xs px-2.5 gap-1 text-surface-400 hover:text-amber-400"
+                title="Report participant"
+              >
+                <Flag className="h-3 w-3 text-amber-400" />
+                <span className="hidden sm:inline">Report</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleBlockPeer}
+                className="h-8 text-xs px-2.5 gap-1 text-surface-400 hover:text-red-400"
+                title="Block participant"
+              >
+                <Ban className="h-3 w-3 text-red-400" />
+                <span className="hidden sm:inline">Block</span>
               </Button>
             </>
           )}
@@ -869,6 +942,26 @@ export function TextChatInterface({
           </span>
         </div>
       )}
+
+      {/* Safety & Reporting Dialogs */}
+      <ReportDialog
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        reporterSessionId={sessionId}
+        reportedSessionId={matchId}
+        conversationId={matchId}
+        onBlockPeer={handleSkip}
+      />
+
+      <TermsAgreementModal
+        isOpen={isTermsOpen}
+        onAccept={() => setIsTermsOpen(false)}
+        onDecline={() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = '/';
+          }
+        }}
+      />
     </Card>
   );
 }

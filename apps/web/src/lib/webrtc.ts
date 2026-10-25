@@ -74,4 +74,3 @@ export function getSafeDiagnostics(
     remoteTracksCount: remoteStream ? remoteStream.getTracks().length : 0,
   };
 }
-

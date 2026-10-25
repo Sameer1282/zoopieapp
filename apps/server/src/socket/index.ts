@@ -250,6 +250,12 @@ export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
       if (result.matched && result.match) {
         finalizeMatch(io, result.match);
       } else {
+        if (result.error) {
+          socket.emit(SOCKET_EVENTS.ERROR, {
+            code: 'SESSION_SUSPENDED',
+            message: result.error,
+          });
+        }
         socket.emit(SOCKET_EVENTS.QUEUE_STATUS, {
           status: result.status,
           mode,
@@ -316,6 +322,12 @@ export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
       if (result.matched && result.match) {
         finalizeMatch(io, result.match);
       } else {
+        if (result.error) {
+          socket.emit(SOCKET_EVENTS.ERROR, {
+            code: 'SESSION_SUSPENDED',
+            message: result.error,
+          });
+        }
         socket.emit(SOCKET_EVENTS.QUEUE_STATUS, {
           status: result.status,
           mode,

@@ -21,6 +21,12 @@ const EnvSchema = z
     TURN_SERVER_USERNAME: z.string().optional(),
     TURN_SERVER_CREDENTIAL: z.string().optional(),
     TURN_CREDENTIAL_TTL_SECONDS: z.coerce.number().int().positive().default(86400),
+    // Admin & Moderation Authentication
+    ADMIN_SECRET_KEY: z
+      .string()
+      .min(16)
+      .default('zoopie-moderator-secret-key-development-safe-placeholder-123'),
+    ADMIN_TOKEN_EXPIRY_SECONDS: z.coerce.number().int().positive().default(28800), // 8 hours
   })
   .refine(
     data => {

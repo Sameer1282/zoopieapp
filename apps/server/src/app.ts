@@ -11,6 +11,7 @@ import { reportsRouter } from './routes/reports.js';
 import { blocksRouter } from './routes/blocks.js';
 import { sessionsRouter } from './routes/sessions.js';
 import { webrtcRouter } from './routes/webrtc.js';
+import { adminRouter } from './routes/admin.js';
 
 export function createApp(): Application {
   const app = express();
@@ -83,6 +84,7 @@ export function createApp(): Application {
   app.use(sessionsRouter);
   app.use(blocksRouter);
   app.use(webrtcRouter);
+  app.use(adminRouter);
   app.use('/api/reports', strictRateLimiter, reportsRouter);
 
   // 7. 404 handler
