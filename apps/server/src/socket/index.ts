@@ -11,6 +11,9 @@ import {
   QueueCancelPayloadSchema,
   MatchSkipPayloadSchema,
   MatchStopPayloadSchema,
+  WebRtcOfferPayloadSchema,
+  WebRtcAnswerPayloadSchema,
+  WebRtcIceCandidatePayloadSchema,
   MAX_MESSAGES_PER_WINDOW,
   RATE_LIMIT_WINDOW_SECONDS,
   type ServerToClientEvents,
@@ -561,7 +564,125 @@ export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
     });
 
     // ==========================================
-    // 7. Disconnect Handling
+    // 7. WebRTC Audio/Video Signaling
+    // ==========================================
+    socket.on(SOCKET_EVENTS.SIGNAL_OFFER, payload => {
+      const parsed = WebRtcOfferPayloadSchema.safeParse(payload);
+      if (!parsed.success) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'INVALID_PAYLOAD',
+          message: 'Malformed WebRTC offer payload',
+          details: parsed.error.format(),
+        });
+        return;
+      }
+
+      const { matchId, sdp, type } = parsed.data;
+      const sessionId = socket.data.sessionId;
+
+      if (socket.data.currentMatchId && socket.data.currentMatchId !== matchId) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'UNAUTHORIZED_MATCH',
+          message: 'Offer matchId does not match current active match',
+        });
+        return;
+      }
+
+      if (!sessionId || !matchManager.isAuthorizedParticipant(matchId, sessionId)) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'UNAUTHORIZED_MATCH',
+          message: 'Unauthorized: Cannot send WebRTC offer to unauthorized match',
+        });
+        return;
+      }
+
+      const roomKey = `match:${matchId}`;
+      socket.to(roomKey).emit(SOCKET_EVENTS.SIGNAL_OFFER, {
+        matchId,
+        sdp,
+        type,
+      });
+
+      logger.info('WebRTC offer relayed', {
+        matchId,
+        sessionId,
+      });
+    });
+
+    socket.on(SOCKET_EVENTS.SIGNAL_ANSWER, payload => {
+      const parsed = WebRtcAnswerPayloadSchema.safeParse(payload);
+      if (!parsed.success) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'INVALID_PAYLOAD',
+          message: 'Malformed WebRTC answer payload',
+          details: parsed.error.format(),
+        });
+        return;
+      }
+
+      const { matchId, sdp, type } = parsed.data;
+      const sessionId = socket.data.sessionId;
+
+      if (socket.data.currentMatchId && socket.data.currentMatchId !== matchId) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'UNAUTHORIZED_MATCH',
+          message: 'Answer matchId does not match current active match',
+        });
+        return;
+      }
+
+      if (!sessionId || !matchManager.isAuthorizedParticipant(matchId, sessionId)) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'UNAUTHORIZED_MATCH',
+          message: 'Unauthorized: Cannot send WebRTC answer to unauthorized match',
+        });
+        return;
+      }
+
+      const roomKey = `match:${matchId}`;
+      socket.to(roomKey).emit(SOCKET_EVENTS.SIGNAL_ANSWER, {
+        matchId,
+        sdp,
+        type,
+      });
+
+      logger.info('WebRTC answer relayed', {
+        matchId,
+        sessionId,
+      });
+    });
+
+    socket.on(SOCKET_EVENTS.SIGNAL_ICE_CANDIDATE, payload => {
+      const parsed = WebRtcIceCandidatePayloadSchema.safeParse(payload);
+      if (!parsed.success) {
+        socket.emit(SOCKET_EVENTS.ERROR, {
+          code: 'INVALID_PAYLOAD',
+          message: 'Malformed WebRTC ICE candidate payload',
+          details: parsed.error.format(),
+        });
+        return;
+      }
+
+      const { matchId, candidate } = parsed.data;
+      const sessionId = socket.data.sessionId;
+
+      if (socket.data.currentMatchId && socket.data.currentMatchId !== matchId) {
+        return; // Silently drop stale candidate
+      }
+
+      if (!sessionId || !matchManager.isAuthorizedParticipant(matchId, sessionId)) {
+        return; // Silently drop unauthorized candidate
+      }
+
+      const roomKey = `match:${matchId}`;
+      socket.to(roomKey).emit(SOCKET_EVENTS.SIGNAL_ICE_CANDIDATE, {
+        matchId,
+        candidate,
+      });
+    });
+
+    // ==========================================
+    // 8. Disconnect Handling
     // ==========================================
     socket.on('disconnect', () => {
       // Remove from matchmaking queues

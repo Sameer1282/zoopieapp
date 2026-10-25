@@ -14,6 +14,13 @@ const EnvSchema = z
       .default('postgresql://postgres:postgres@localhost:5432/zoopie_dev?schema=public'),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
     RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
+    // WebRTC STUN / TURN Configuration
+    STUN_SERVER_URL: z.string().default('stun:stun.l.google.com:19302'),
+    TURN_SERVER_URL: z.string().optional(),
+    TURN_SERVER_SECRET: z.string().optional(),
+    TURN_SERVER_USERNAME: z.string().optional(),
+    TURN_SERVER_CREDENTIAL: z.string().optional(),
+    TURN_CREDENTIAL_TTL_SECONDS: z.coerce.number().int().positive().default(86400),
   })
   .refine(
     data => {

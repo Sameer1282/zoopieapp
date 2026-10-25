@@ -26,8 +26,8 @@ test.describe('Zoopie Phase 2 Smoke & Navigation Test', () => {
     await page.getByRole('button', { name: /start video chat/i }).click();
 
     await expect(page).toHaveURL(/\/chat\?mode=video/);
-    await expect(page.getByText('Camera & Audio Setup')).toBeVisible();
-    await expect(page.getByText('Matchmaking Queue Staged for Phase 3')).toBeVisible();
+    await expect(page.getByText('Camera & Microphone Permission')).toBeVisible();
+    await expect(page.getByRole('button', { name: /enable camera & mic/i })).toBeVisible();
   });
 
   test('navigates to safety guidelines page', async ({ page }) => {

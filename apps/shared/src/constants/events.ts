@@ -28,6 +28,11 @@ export const SOCKET_EVENTS = {
   MATCH_FOUND: 'matchmaking:found',
   MATCH_SKIP: 'matchmaking:skip',
   MATCH_STOP: 'matchmaking:stop',
+
+  // WebRTC audio/video signaling events
+  SIGNAL_OFFER: 'webrtc:offer',
+  SIGNAL_ANSWER: 'webrtc:answer',
+  SIGNAL_ICE_CANDIDATE: 'webrtc:ice_candidate',
 } as const;
 
 export type SocketEventName = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];

@@ -21,6 +21,11 @@ import type {
   QueueTimeoutPayload,
   MatchFoundPayload,
 } from '../schemas/matchmaking.js';
+import type {
+  WebRtcOfferPayload,
+  WebRtcAnswerPayload,
+  WebRtcIceCandidatePayload,
+} from '../schemas/webrtc.js';
 
 export interface ServerToClientEvents {
   pong: (payload: PongPayload) => void;
@@ -41,6 +46,11 @@ export interface ServerToClientEvents {
   'matchmaking:status': (payload: QueueStatusPayload) => void;
   'matchmaking:found': (payload: MatchFoundPayload) => void;
   'matchmaking:timeout': (payload: QueueTimeoutPayload) => void;
+
+  // WebRTC audio/video signaling
+  'webrtc:offer': (payload: WebRtcOfferPayload) => void;
+  'webrtc:answer': (payload: WebRtcAnswerPayload) => void;
+  'webrtc:ice_candidate': (payload: WebRtcIceCandidatePayload) => void;
 }
 
 export interface ClientToServerEvents {
@@ -59,6 +69,11 @@ export interface ClientToServerEvents {
   'matchmaking:cancel': (payload: QueueCancelPayload) => void;
   'matchmaking:skip': (payload: MatchSkipPayload) => void;
   'matchmaking:stop': (payload: MatchStopPayload) => void;
+
+  // WebRTC audio/video signaling
+  'webrtc:offer': (payload: WebRtcOfferPayload) => void;
+  'webrtc:answer': (payload: WebRtcAnswerPayload) => void;
+  'webrtc:ice_candidate': (payload: WebRtcIceCandidatePayload) => void;
 }
 
 export interface InterServerEvents {
