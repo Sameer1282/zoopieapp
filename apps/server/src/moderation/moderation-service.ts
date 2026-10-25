@@ -25,7 +25,8 @@ class ModerationService {
    * Submit an abuse report
    */
   async submitReport(req: CreateReportRequest, requestId?: string): Promise<ReportResponse> {
-    const targetKey = req.reportedSessionId || req.reportedFingerprint || 'unknown';
+    const targetKey =
+      req.reportedSessionId || req.reportedFingerprint || req.conversationId || 'unknown';
     const rateLimitKey = `${req.reporterSessionId}:${targetKey}`;
     const now = Date.now();
 

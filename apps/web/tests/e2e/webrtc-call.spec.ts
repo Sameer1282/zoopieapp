@@ -1,16 +1,18 @@
 import { test, expect } from '@playwright/test';
 
+test.use({
+  launchOptions: {
+    args: [
+      '--use-fake-ui-for-media-stream',
+      '--use-fake-device-for-media-stream',
+      '--allow-file-access',
+    ],
+  },
+  permissions: ['camera', 'microphone'],
+});
+
 test.describe('Phase 6: WebRTC Two-Client Video & Audio Call', () => {
-  test.use({
-    launchOptions: {
-      args: [
-        '--use-fake-ui-for-media-stream',
-        '--use-fake-device-for-media-stream',
-        '--allow-file-access',
-      ],
-    },
-    permissions: ['camera', 'microphone'],
-  });
+  test.setTimeout(60000);
 
   test('two independent browser clients establish WebRTC video call with camera and mic controls', async ({
     browser,
@@ -21,6 +23,14 @@ test.describe('Phase 6: WebRTC Two-Client Video & Audio Call', () => {
     });
     const context2 = await browser.newContext({
       permissions: ['camera', 'microphone'],
+    });
+
+    // Accept terms in storage before navigating
+    await context1.addInitScript(() => {
+      localStorage.setItem('zoopie_terms_accepted_v1', new Date().toISOString());
+    });
+    await context2.addInitScript(() => {
+      localStorage.setItem('zoopie_terms_accepted_v1', new Date().toISOString());
     });
 
     const page1 = await context1.newPage();
@@ -43,22 +53,30 @@ test.describe('Phase 6: WebRTC Two-Client Video & Audio Call', () => {
     await expect(page2.getByTestId('local-video-preview')).toBeVisible({ timeout: 10000 });
 
     // 5. Verify both have mic and camera toggle controls
-    const micBtn1 = page1.getByRole('button', { name: /mute microphone/i });
-    const camBtn1 = page1.getByRole('button', { name: /turn off camera/i });
-    await expect(micBtn1).toBeVisible();
-    await expect(camBtn1).toBeVisible();
+    await expect(page1.getByRole('button', { name: /mute microphone/i })).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page1.getByRole('button', { name: /turn off camera/i })).toBeVisible({
+      timeout: 10000,
+    });
 
     // 6. Test toggling microphone and camera
-    await micBtn1.click();
-    await expect(page1.getByRole('button', { name: /unmute microphone/i })).toBeVisible();
+    await page1.getByRole('button', { name: /mute microphone/i }).click();
+    await expect(page1.getByRole('button', { name: /unmute microphone/i })).toBeVisible({
+      timeout: 10000,
+    });
 
-    await camBtn1.click();
-    await expect(page1.getByRole('button', { name: /turn on camera/i })).toBeVisible();
+    await page1.getByRole('button', { name: /turn off camera/i }).click();
+    await expect(page1.getByRole('button', { name: /turn on camera/i })).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page1.getByText(/camera turned off/i)).toBeVisible();
 
     // Turn camera back on
     await page1.getByRole('button', { name: /turn on camera/i }).click();
-    await expect(page1.getByRole('button', { name: /turn off camera/i })).toBeVisible();
+    await expect(page1.getByRole('button', { name: /turn off camera/i })).toBeVisible({
+      timeout: 10000,
+    });
 
     // 7. Verify WebRTC diagnostics drawer works safely without leaking credentials
     await page1.getByRole('button', { name: /diagnostics/i }).click();

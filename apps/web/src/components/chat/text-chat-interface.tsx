@@ -350,6 +350,9 @@ export function TextChatInterface({
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       if (searchTimerRef.current) clearInterval(searchTimerRef.current);
       socket.emit(SOCKET_EVENTS.LEAVE_MATCH, { matchId });
+      if (typeof socket.removeAllListeners === 'function') {
+        socket.removeAllListeners();
+      }
       socket.disconnect();
     };
   }, [matchId, sessionId]);
@@ -948,7 +951,6 @@ export function TextChatInterface({
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
         reporterSessionId={sessionId}
-        reportedSessionId={matchId}
         conversationId={matchId}
         onBlockPeer={handleSkip}
       />

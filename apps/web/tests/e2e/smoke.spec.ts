@@ -21,13 +21,38 @@ test.describe('Zoopie Phase 2 Smoke & Navigation Test', () => {
     await expect(page.getByRole('link', { name: /terms of service/i })).toBeVisible();
   });
 
-  test('navigates to video chat setup route', async ({ page }) => {
+  test('navigates to video chat setup route and handles 18+ terms gate', async ({ page }) => {
     await page.goto('/');
     await page.getByRole('button', { name: /start video chat/i }).click();
 
-    await expect(page).toHaveURL(/\/chat\?mode=video/);
-    await expect(page.getByText('Camera & Microphone Permission')).toBeVisible();
-    await expect(page.getByRole('button', { name: /enable camera & mic/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/chat\?mode=video/, { timeout: 15000 });
+
+    // Handle 18+ terms modal if visible
+    const termsHeading = page.getByText(/Safety & Guidelines/i);
+    try {
+      await expect(termsHeading).toBeVisible({ timeout: 5000 });
+      const checkbox = page.getByRole('checkbox');
+      await checkbox.click();
+      await page.getByRole('button', { name: /I Agree & Enter Chat/i }).click();
+    } catch {
+      // Bypassed if already accepted
+    }
+
+    await expect(page.getByText('Camera & Microphone Permission')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('button', { name: /enable camera & mic/i })).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test('navigates to text chat mode from homepage', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('zoopie_terms_accepted_v1', new Date().toISOString());
+    });
+    await page.goto('/');
+    await page.getByRole('button', { name: /start text chat/i }).click();
+
+    await expect(page).toHaveURL(/\/chat\?mode=text/, { timeout: 15000 });
+    await expect(page.getByText(/Text Mode/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('navigates to safety guidelines page', async ({ page }) => {

@@ -182,6 +182,10 @@ export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
 
   maintenanceTimer.unref();
 
+  io.engine.on('close', () => {
+    clearInterval(maintenanceTimer);
+  });
+
   io.on('connection', (socket: TypedSocket) => {
     socket.data.connectedAt = Date.now();
     socket.data.messageTimestamps = [];

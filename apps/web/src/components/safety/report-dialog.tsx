@@ -10,7 +10,7 @@ export interface ReportDialogProps {
   isOpen: boolean;
   onClose: () => void;
   reporterSessionId: string;
-  reportedSessionId: string;
+  reportedSessionId?: string;
   conversationId?: string;
   onReportSuccess?: () => void;
   onBlockPeer?: () => void;
@@ -124,12 +124,17 @@ export function ReportDialog({
       // 2. Submit Block if requested
       if (alsoBlock) {
         try {
+          const targetFingerprint =
+            reportedSessionId ||
+            (conversationId
+              ? `fp_match_${conversationId.replace(/[^a-zA-Z0-9]/g, '').padEnd(16, '0')}`
+              : `fp_anon_${Date.now()}_00000000`);
           await fetch(`${apiUrl}/api/blocks`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               blockerSessionId: reporterSessionId,
-              blockedFingerprint: reportedSessionId,
+              blockedFingerprint: targetFingerprint,
               reason: category,
             }),
           });

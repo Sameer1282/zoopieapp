@@ -111,6 +111,8 @@ export function VideoChatInterface({
   const makingOfferRef = useRef<boolean>(false);
   const ignoreOfferRef = useRef<boolean>(false);
 
+  const localStreamRef = useRef<MediaStream | null>(null);
+
   // Tear down peer connection cleanly
   const teardownPeerConnection = useCallback(() => {
     if (peerConnectionRef.current) {
@@ -127,11 +129,12 @@ export function VideoChatInterface({
 
   // Stop local media tracks completely
   const stopLocalMedia = useCallback(() => {
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-      setLocalStream(null);
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
     }
-  }, [localStream]);
+    setLocalStream(null);
+  }, []);
 
   // Request camera and microphone access deliberately upon user interaction
   const requestMediaPermissions = async () => {
@@ -160,6 +163,7 @@ export function VideoChatInterface({
         },
       });
 
+      localStreamRef.current = stream;
       setLocalStream(stream);
       setVideoEnabled(true);
       setAudioEnabled(true);
@@ -195,22 +199,30 @@ export function VideoChatInterface({
 
   // Toggle Microphone (Mute/Unmute)
   const handleToggleAudio = () => {
-    if (!localStream) return;
-    const audioTrack = localStream.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
-      setAudioEnabled(audioTrack.enabled);
-    }
+    setAudioEnabled(prev => {
+      const next = !prev;
+      if (localStream) {
+        const audioTrack = localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = next;
+        }
+      }
+      return next;
+    });
   };
 
   // Toggle Camera (Enable/Disable)
   const handleToggleVideo = () => {
-    if (!localStream) return;
-    const videoTrack = localStream.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-      setVideoEnabled(videoTrack.enabled);
-    }
+    setVideoEnabled(prev => {
+      const next = !prev;
+      if (localStream) {
+        const videoTrack = localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = next;
+        }
+      }
+      return next;
+    });
   };
 
   // Setup RTCPeerConnection with Perfect Negotiation Pattern
@@ -333,6 +345,12 @@ export function VideoChatInterface({
     [localStream, teardownPeerConnection, remoteStream]
   );
 
+  const initializePeerConnectionRef = useRef(initializePeerConnection);
+  initializePeerConnectionRef.current = initializePeerConnection;
+
+  const teardownPeerConnectionRef = useRef(teardownPeerConnection);
+  teardownPeerConnectionRef.current = teardownPeerConnection;
+
   // Initialize Socket.IO connection and attach WebRTC signaling listeners
   useEffect(() => {
     const socket = io(config.socketUrl, {
@@ -348,7 +366,7 @@ export function VideoChatInterface({
       setMatchId(payload.matchId);
       setCommonInterests(payload.commonInterests);
       setCallState('connecting');
-      initializePeerConnection(payload.matchId, payload.role);
+      initializePeerConnectionRef.current(payload.matchId, payload.role);
     });
 
     // 2. Incoming WebRTC Offer (Perfect Negotiation with Glare Handling)
@@ -433,7 +451,7 @@ export function VideoChatInterface({
 
     // 5. Match Ended / Peer Departure
     socket.on(SOCKET_EVENTS.PEER_LEFT, payload => {
-      teardownPeerConnection();
+      teardownPeerConnectionRef.current();
       setCallState('disconnected');
       setEndReason(
         payload.reason === 'skip'
@@ -445,7 +463,7 @@ export function VideoChatInterface({
     });
 
     socket.on(SOCKET_EVENTS.MATCH_ENDED, payload => {
-      teardownPeerConnection();
+      teardownPeerConnectionRef.current();
       setCallState('disconnected');
       setEndReason(
         payload.reason === 'skip'
@@ -471,10 +489,17 @@ export function VideoChatInterface({
     });
 
     return () => {
-      teardownPeerConnection();
+      teardownPeerConnectionRef.current();
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+      }
+      if (typeof socket.removeAllListeners === 'function') {
+        socket.removeAllListeners();
+      }
       socket.disconnect();
     };
-  }, [initializePeerConnection, teardownPeerConnection]);
+  }, []);
 
   // Next / Skip: closes old call and re-enters video queue
   const handleSkip = () => {
@@ -709,7 +734,7 @@ export function VideoChatInterface({
                 aria-label={audioEnabled ? 'Mute microphone' : 'Unmute microphone'}
               >
                 {audioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                <span>{audioEnabled ? 'Mute' : 'Unmuted'}</span>
+                <span>{audioEnabled ? 'Mute' : 'Unmute'}</span>
               </Button>
 
               {/* Camera Toggle */}
@@ -790,7 +815,6 @@ export function VideoChatInterface({
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
         reporterSessionId={sessionId}
-        reportedSessionId={matchId}
         conversationId={matchId}
         onBlockPeer={handleSkip}
       />

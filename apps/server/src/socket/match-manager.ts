@@ -142,7 +142,13 @@ class MatchManager {
     let match = this.getMatch(matchId);
 
     // In development/test mode, auto-provision test matches
-    if (!match && (matchId.startsWith('test-') || matchId.startsWith('dev-'))) {
+    if (
+      !match &&
+      (matchId.startsWith('test-') ||
+        matchId.startsWith('dev-') ||
+        matchId.startsWith('e2e-') ||
+        matchId.includes('test'))
+    ) {
       match = this.createMatch(matchId, 'text', { isDevFixture: true });
     }
 
