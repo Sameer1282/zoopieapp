@@ -30,6 +30,7 @@ healthRouter.get('/health', (_req: Request, res: Response) => {
     service: 'zoopie-server',
     version: '0.1.0',
     environment: env.NODE_ENV,
+    turnConfigured: Boolean(env.TURN_SERVER_URL),
   };
 
   // Validate outgoing payload against shared contract
@@ -77,6 +78,7 @@ healthRouter.get(['/health/ready', '/ready'], async (_req: Request, res: Respons
     ready: true,
     uptime: Math.floor((Date.now() - startTime) / 1000),
     database: dbStatus,
+    turnConfigured: Boolean(env.TURN_SERVER_URL),
     memory: {
       heapUsedMb,
       rssMb: Math.round(mem.rss / 1024 / 1024),

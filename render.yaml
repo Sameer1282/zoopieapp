@@ -1,0 +1,50 @@
+services:
+  # ==============================================================================
+  # Zoopie Express & Socket.IO Real-Time Backend Service
+  # ==============================================================================
+  - type: web
+    name: zoopie-server
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @zoopie/shared build && pnpm --filter @zoopie/server prisma:generate && pnpm --filter @zoopie/server build
+    startCommand: pnpm --filter @zoopie/server start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGIN
+        sync: false # Set in Render Dashboard: e.g. https://zoopie.vercel.app,https://zoopie.chat
+      - key: ALLOW_VERCEL_PREVIEWS
+        value: 'true'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: zoopie-db
+          property: connectionString
+      - key: DB_TIMEOUT_MS
+        value: '3000'
+      - key: ADMIN_SECRET_KEY
+        generateValue: true # Render securely generates a 32+ character random secret
+      - key: STUN_SERVER_URL
+        value: stun:stun.l.google.com:19302
+      - key: TURN_SERVER_URL
+        sync: false # Set in Render Dashboard from TURN provider (Metered, Twilio, Coturn)
+      - key: TURN_SERVER_SECRET
+        sync: false
+      - key: TURN_SERVER_USERNAME
+        sync: false
+      - key: TURN_SERVER_CREDENTIAL
+        sync: false
+      - key: TURN_CREDENTIAL_TTL_SECONDS
+        value: '86400'
+
+databases:
+  # ==============================================================================
+  # Zoopie Managed PostgreSQL Database
+  # ==============================================================================
+  - name: zoopie-db
+    plan: starter
+    region: oregon
+    databaseName: zoopie_prod
+    user: zoopie_admin

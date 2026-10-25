@@ -14,9 +14,16 @@ server.listen(env.PORT, () => {
     port: env.PORT,
     environment: env.NODE_ENV,
     corsOrigin: env.CLIENT_ORIGIN,
-    healthEndpoint: `http://localhost:${env.PORT}/health`,
-    readinessEndpoint: `http://localhost:${env.PORT}/ready`,
+    healthEndpoint: `/health`,
+    readinessEndpoint: `/ready`,
+    turnConfigured: Boolean(env.TURN_SERVER_URL),
   });
+
+  if (env.NODE_ENV === 'production' && !env.TURN_SERVER_URL) {
+    logger.warn(
+      'DEPLOYMENT WARNING: TURN_SERVER_URL is unset in production. Direct WebRTC peer connections will fail behind symmetric NATs and restrictive firewalls.'
+    );
+  }
 });
 
 let isShuttingDown = false;

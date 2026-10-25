@@ -9,6 +9,7 @@ export const HealthCheckResponseSchema = z.object({
   service: z.string(),
   version: z.string(),
   environment: z.string().optional(),
+  turnConfigured: z.boolean().optional(),
 });
 
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;

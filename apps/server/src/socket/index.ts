@@ -21,7 +21,7 @@ import {
   type InterServerEvents,
   type SocketData,
 } from '@zoopie/shared';
-import { env } from '../config/env.js';
+import { isOriginAllowed } from '../utils/cors.js';
 import { matchManager } from './match-manager.js';
 import { matchmakingQueue, type MatchPairResult } from './matchmaking-queue.js';
 import { logger } from '../utils/logger.js';
@@ -133,9 +133,6 @@ function finalizeMatch(io: TypedSocketServer, match: MatchPairResult): void {
 }
 
 export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
-  const allowedOrigins =
-    env.CLIENT_ORIGIN === '*' ? '*' : env.CLIENT_ORIGIN.split(',').map(o => o.trim());
-
   const io = new SocketIOServer<
     ClientToServerEvents,
     ServerToClientEvents,
@@ -143,7 +140,13 @@ export function initSocketServer(httpServer: HttpServer): TypedSocketServer {
     SocketData
   >(httpServer, {
     cors: {
-      origin: allowedOrigins,
+      origin: (origin, callback) => {
+        if (isOriginAllowed(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS origin '${origin}' is not allowed by Socket.IO policy`));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true,
     },

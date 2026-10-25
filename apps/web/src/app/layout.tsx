@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://zoopie.chat'),
   title: {
     template: '%s | Zoopie',
     default: 'Zoopie — Friendly, Modern Real-Time Chat',
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     title: 'Zoopie — Friendly, Modern Real-Time Chat',
     description:
       'Connect spontaneously with people who share your curiosity. Private, peer-to-peer, and zero clutter.',
-    url: 'https://zoopie.local',
+    url: '/',
     siteName: 'Zoopie',
     locale: 'en_US',
     type: 'website',

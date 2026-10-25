@@ -1,6 +1,7 @@
 import express, { type Application, type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { isOriginAllowed } from './utils/cors.js';
 import { env } from './config/env.js';
 import { requestIdMiddleware } from './middleware/request-id.js';
 import { standardRateLimiter, strictRateLimiter } from './middleware/rate-limiter.js';
@@ -52,18 +53,9 @@ export function createApp(): Application {
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-        if (!origin) return callback(null, true);
-
-        if (env.CLIENT_ORIGIN === '*') {
+        if (isOriginAllowed(origin)) {
           return callback(null, true);
         }
-
-        const origins = env.CLIENT_ORIGIN.split(',').map(o => o.trim());
-        if (origins.includes(origin)) {
-          return callback(null, true);
-        }
-
         return callback(new Error(`CORS origin '${origin}' is not allowed`));
       },
       credentials: true,

@@ -124,3 +124,37 @@ describe('Phase 3 API Contracts & Centralized Error Handling', () => {
     expect(res.body.error.stack).toBeUndefined();
   });
 });
+
+describe('Phase 9 Deployment & CORS Origin Hardening', () => {
+  it('includes turnConfigured flag on /health liveness probe', async () => {
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.turnConfigured).toBe('boolean');
+  });
+
+  it('includes turnConfigured flag on /ready readiness probe', async () => {
+    const res = await request(app).get('/ready');
+    expect(res.status).toBe(200);
+    expect(typeof res.body.turnConfigured).toBe('boolean');
+  });
+
+  it('handles CORS preflight for approved frontend origin', async () => {
+    const res = await request(app)
+      .options('/health')
+      .set('Origin', 'http://localhost:3000')
+      .set('Access-Control-Request-Method', 'GET');
+
+    expect(res.status).toBe(204);
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+  });
+
+  it('rejects CORS preflight for unapproved origin', async () => {
+    const res = await request(app)
+      .options('/health')
+      .set('Origin', 'https://malicious-site.example.com')
+      .set('Access-Control-Request-Method', 'GET');
+
+    // Unapproved origins do not receive Access-Control-Allow-Origin header
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+  });
+});

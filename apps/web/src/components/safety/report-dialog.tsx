@@ -5,6 +5,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ShieldAlert, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { ReportCategory } from '@zoopie/shared';
+import { config } from '@/lib/config';
 
 export interface ReportDialogProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export function ReportDialog({
     setIsSubmitting(true);
     setFeedback(null);
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const apiUrl = config.apiUrl;
 
     try {
       // 1. Submit Abuse Report

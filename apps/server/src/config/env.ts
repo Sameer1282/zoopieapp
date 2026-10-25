@@ -6,12 +6,18 @@ dotenv.config();
 
 const EnvSchema = z
   .object({
-    PORT: z.coerce.number().int().min(1024).max(65535).default(4000),
+    PORT: z.coerce.number().int().min(1).max(65535).default(4000),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     CLIENT_ORIGIN: z.string().default('http://localhost:3000'),
+    ALLOW_VERCEL_PREVIEWS: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform(v => v === 'true'),
     DATABASE_URL: z
       .string()
       .default('postgresql://postgres:postgres@localhost:5432/zoopie_dev?schema=public'),
+    DB_TIMEOUT_MS: z.coerce.number().int().positive().default(3000),
+    REDIS_URL: z.string().optional(),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
     RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
     // WebRTC STUN / TURN Configuration
