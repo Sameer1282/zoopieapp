@@ -1,0 +1,28 @@
+{
+  "name": "zoopie-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,WEB\" -c \"blue.bold,magenta.bold\" \"pnpm --filter @zoopie/server dev\" \"pnpm --filter @zoopie/web dev\"",
+    "dev:server": "pnpm --filter @zoopie/server dev",
+    "dev:web": "pnpm --filter @zoopie/web dev",
+    "build": "pnpm --filter @zoopie/shared build && pnpm --filter @zoopie/server build && pnpm --filter @zoopie/web build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "@playwright/test": "^1.50.1",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.20.1",
+    "prettier": "^3.5.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^3.0.5"
+  }
+}
