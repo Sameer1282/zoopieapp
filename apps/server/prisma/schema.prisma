@@ -1,0 +1,223 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum SessionStatus {
+  ACTIVE
+  DISCONNECTED
+  BANNED
+}
+
+enum ConversationMode {
+  VIDEO
+  TEXT
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ENDED
+  TERMINATED
+}
+
+enum TerminationReason {
+  NORMAL_DISCONNECT
+  PEER_DISCONNECT
+  SKIP
+  REPORT
+  TIMEOUT
+  NETWORK_ERROR
+}
+
+enum ReportCategory {
+  INAPPROPRIATE_CONTENT
+  HARASSMENT
+  UNDERAGE_SUSPICION
+  SPAM_OR_BOT
+  HATE_SPEECH
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  DISMISSED
+  ACTION_TAKEN
+}
+
+enum ModerationActionType {
+  WARNING
+  TEMPORARY_BAN
+  PERMANENT_BAN
+  SESSION_TERMINATION
+  DISMISS
+}
+
+enum AdminRole {
+  SUPERADMIN
+  MODERATOR
+  AUDITOR
+}
+
+/// Opaque user/session record.
+/// Raw IP addresses and PII are never persisted; only HMAC/salted fingerprint hashes
+/// are stored for rate limiting and abuse mitigation.
+model UserSession {
+  id              String        @id @default(uuid())
+  fingerprintHash String        @map("fingerprint_hash")
+  status          SessionStatus @default(ACTIVE)
+  isBanned        Boolean       @default(false) @map("is_banned")
+  bannedUntil     DateTime?     @map("banned_until")
+  banReason       String?       @map("ban_reason")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  lastSeenAt      DateTime      @default(now()) @updatedAt @map("last_seen_at")
+
+  // Relationships
+  conversations    ConversationParticipant[]
+  submittedReports AbuseReport[]             @relation("ReportSubmitter")
+  blocksCreated    UserBlock[]               @relation("BlockerSession")
+
+  @@index([fingerprintHash])
+  @@index([isBanned, bannedUntil])
+  @@index([createdAt])
+  @@map("user_sessions")
+}
+
+/// Match/Conversation metadata.
+/// DATA RETENTION & PRIVACY RULE:
+/// Ordinary text chat messages and peer media streams are strictly EPHEMERAL and NOT stored.
+/// Only session metadata (mode, duration, timestamps, termination reason) is recorded.
+model Conversation {
+  id                String             @id @default(uuid())
+  mode              ConversationMode
+  status            ConversationStatus @default(ACTIVE)
+  startedAt         DateTime           @default(now()) @map("started_at")
+  endedAt           DateTime?          @map("ended_at")
+  durationSeconds   Int?               @map("duration_seconds")
+  terminationReason TerminationReason? @map("termination_reason")
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  // Relationships
+  participants ConversationParticipant[]
+  abuseReports AbuseReport[]
+
+  @@index([mode, status])
+  @@index([startedAt])
+  @@map("conversations")
+}
+
+/// Links an opaque user session to a conversation session.
+model ConversationParticipant {
+  id             String    @id @default(uuid())
+  conversationId String    @map("conversation_id")
+  sessionId      String    @map("session_id")
+  joinedAt       DateTime  @default(now()) @map("joined_at")
+  leftAt         DateTime? @map("left_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  session      UserSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, sessionId])
+  @@index([sessionId])
+  @@index([conversationId])
+  @@map("conversation_participants")
+}
+
+/// User blocks preventing two participants from being paired in future matches.
+model UserBlock {
+  id                 String   @id @default(uuid())
+  blockerSessionId   String   @map("blocker_session_id")
+  blockedFingerprint String   @map("blocked_fingerprint")
+  reason             String?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  blockerSession UserSession @relation("BlockerSession", fields: [blockerSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerSessionId, blockedFingerprint])
+  @@index([blockedFingerprint])
+  @@index([blockerSessionId])
+  @@map("user_blocks")
+}
+
+/// Participant abuse reports submitted for safety and trust reviews.
+model AbuseReport {
+  id                  String         @id @default(uuid())
+  reporterSessionId   String         @map("reporter_session_id")
+  reportedFingerprint String         @map("reported_fingerprint")
+  conversationId      String?        @map("conversation_id")
+  category            ReportCategory
+  details             String?        @db.VarChar(1000)
+  status              ReportStatus   @default(PENDING)
+  createdAt           DateTime       @default(now()) @map("created_at")
+  resolvedAt          DateTime?      @map("resolved_at")
+
+  reporterSession   UserSession        @relation("ReportSubmitter", fields: [reporterSessionId], references: [id], onDelete: Cascade)
+  conversation      Conversation?      @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  moderationActions ModerationAction[]
+
+  @@index([reportedFingerprint, status])
+  @@index([status, createdAt])
+  @@index([reporterSessionId])
+  @@map("abuse_reports")
+}
+
+/// Audit trail of moderation decisions executed by human or automated systems.
+model ModerationAction {
+  id                String               @id @default(uuid())
+  reportId          String?              @map("report_id")
+  targetFingerprint String               @map("target_fingerprint")
+  actionType        ModerationActionType @map("action_type")
+  reason            String               @db.VarChar(500)
+  adminId           String?              @map("admin_id")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  expiresAt         DateTime?            @map("expires_at")
+
+  report    AbuseReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  adminUser AdminUser?   @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([targetFingerprint])
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("moderation_actions")
+}
+
+/// Administrator / Moderator user account.
+/// Secure authentication strategy:
+/// - Password hashed using Argon2id with unique cryptographic salt.
+/// - Authenticated via secure, HttpOnly, SameSite=Strict cookies.
+/// - In production, mandatory multi-factor authentication (TOTP/WebAuthn) is required.
+/// - No public self-registration endpoint exists.
+model AdminUser {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(MODERATOR)
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  moderationActions ModerationAction[]
+
+  @@index([email])
+  @@map("admin_users")
+}
+
+/// Optional curated or user-suggested interest tags for matchmaking pairing.
+model InterestTag {
+  id         String   @id @default(uuid())
+  name       String   @unique
+  slug       String   @unique
+  usageCount Int      @default(0) @map("usage_count")
+  isCurated  Boolean  @default(false) @map("is_curated")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([usageCount(sort: Desc)])
+  @@index([slug])
+  @@map("interest_tags")
+}
+

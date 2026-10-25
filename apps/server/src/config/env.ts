@@ -4,11 +4,30 @@ import { z } from 'zod';
 // Load environment variables from .env if present
 dotenv.config();
 
-const EnvSchema = z.object({
-  PORT: z.coerce.number().int().min(1024).max(65535).default(4000),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CLIENT_ORIGIN: z.string().default('http://localhost:3000'),
-});
+const EnvSchema = z
+  .object({
+    PORT: z.coerce.number().int().min(1024).max(65535).default(4000),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    CLIENT_ORIGIN: z.string().default('http://localhost:3000'),
+    DATABASE_URL: z
+      .string()
+      .default('postgresql://postgres:postgres@localhost:5432/zoopie_dev?schema=public'),
+    RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60000),
+    RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(120),
+  })
+  .refine(
+    data => {
+      // Security: Wildcard CORS origin is strictly forbidden in production
+      if (data.NODE_ENV === 'production' && data.CLIENT_ORIGIN.trim() === '*') {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'CLIENT_ORIGIN cannot be wildcard "*" in production environment',
+      path: ['CLIENT_ORIGIN'],
+    }
+  );
 
 export type Env = z.infer<typeof EnvSchema>;
 
