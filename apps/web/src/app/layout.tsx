@@ -1,23 +1,58 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Navbar } from '@/components/navbar';
+import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/footer';
 
 export const metadata: Metadata = {
-  title: 'Zoopie — Real-Time Interactive Platform',
-  description: 'Phase 1 Foundation and Architecture for Zoopie real-time application',
+  title: {
+    template: '%s | Zoopie',
+    default: 'Zoopie — Friendly, Modern Real-Time Chat',
+  },
+  description:
+    'Instant, friendly, and privacy-focused peer-to-peer video and text connections with people who share your curiosity. No account required.',
+  keywords: [
+    'zoopie',
+    'real-time video',
+    'peer to peer',
+    'video chat',
+    'text chat',
+    'shared interests',
+    'social discovery',
+  ],
+  authors: [{ name: 'Zoopie Team' }],
+  openGraph: {
+    title: 'Zoopie — Friendly, Modern Real-Time Chat',
+    description:
+      'Connect spontaneously with people who share your curiosity. Private, peer-to-peer, and zero clutter.',
+    url: 'https://zoopie.local',
+    siteName: 'Zoopie',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Zoopie — Friendly, Modern Real-Time Chat',
+    description:
+      'Connect spontaneously with people who share your curiosity. Private, peer-to-peer, and zero clutter.',
+  },
+  icons: {
+    icon: '/icon',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#070b12',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-primary-500/30 selection:text-white">
-        <div className="relative min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <footer className="border-t border-slate-900 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
-            <p>Zoopie Platform &bull; Phase 1 — Project Foundation & Architecture</p>
-          </footer>
-        </div>
+    <html lang="en" className="dark scroll-smooth">
+      <body className="min-h-screen bg-surface-950 text-surface-100 flex flex-col antialiased selection:bg-brand-500/30 selection:text-white">
+        <Navbar />
+        <main className="flex-1 w-full flex flex-col">{children}</main>
+        <Footer />
       </body>
     </html>
   );

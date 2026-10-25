@@ -138,7 +138,7 @@ export function SocketStatus() {
             {!connected ? (
               <Button
                 size="sm"
-                variant="primary"
+                variant="brand"
                 onClick={connectSocket}
                 isLoading={connecting}
                 className="h-8"
@@ -171,7 +171,7 @@ export function SocketStatus() {
           </div>
           <div className="flex items-center gap-2">
             {rtt !== null && connected && (
-              <Badge variant="purple" className="text-[11px]">
+              <Badge variant="brand" className="text-[11px]">
                 RTT: {rtt} ms
               </Badge>
             )}

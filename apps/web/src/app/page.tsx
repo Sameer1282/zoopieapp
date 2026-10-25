@@ -1,201 +1,114 @@
 import React from 'react';
-import { BackendStatus } from '@/components/backend-status';
-import { SocketStatus } from '@/components/socket-status';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { HeroChatLauncher } from '@/components/landing/hero-launcher';
+import { HowItWorks } from '@/components/landing/how-it-works';
+import { FeaturesSafety } from '@/components/landing/features-safety';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { StatusIndicator } from '@/components/ui/status-indicator';
-import { Server, Layers, ShieldCheck, CheckCircle2, Code2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Activity, ArrowRight, Shield, Zap, Sparkles } from 'lucide-react';
 
 export default function HomePage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-10">
+    <div className="flex flex-col items-center w-full">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900/90 via-slate-900/50 to-slate-950 p-8 sm:p-12 shadow-2xl">
-        <div className="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-primary-600/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="purple">Phase 1 Complete</Badge>
-            <Badge variant="success">pnpm Monorepo</Badge>
-            <Badge variant="default">Strict TypeScript</Badge>
+      <section className="relative w-full pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Subtle decorative background gradient glows */}
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-brand-600/15 via-teal-500/10 to-transparent blur-3xl rounded-full pointer-events-none"
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-5xl space-y-10 text-center">
+          {/* Main Hero Header */}
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1 text-xs font-semibold text-brand-300">
+              <Sparkles className="h-3.5 w-3.5 text-teal-400" />
+              <span>Zoopie Phase 2 &bull; Design System & Landing Page</span>
+            </div>
+
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-white leading-[1.1]">
+              Spontaneous connections.{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-teal-300 to-teal-400">
+                Zero friction.
+              </span>
+            </h1>
+
+            <p className="text-base sm:text-xl text-surface-300 max-w-2xl mx-auto leading-relaxed">
+              Meet real people around shared interests via camera or text. Private, peer-to-peer
+              WebRTC streams, no account tracking, and instant skip controls.
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Zoopie Real-Time Architecture & Foundation
-          </h1>
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed">
-            High-performance monorepo architecture featuring Next.js App Router frontend, Express &
-            Socket.IO backend, and shared TypeScript contracts with Zod runtime validation.
-          </p>
+
+          {/* Interactive Chat Launcher Card */}
+          <HeroChatLauncher />
+
+          {/* Value Props Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto pt-4 text-left">
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-surface-800 bg-surface-900/40">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                <Shield className="h-4 w-4" />
+              </div>
+              <div className="text-xs">
+                <span className="font-semibold text-white block">No Sign-Up Needed</span>
+                <span className="text-surface-400">Zero phone or email requested</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-surface-800 bg-surface-900/40">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/10 text-brand-400 border border-brand-500/20">
+                <Zap className="h-4 w-4" />
+              </div>
+              <div className="text-xs">
+                <span className="font-semibold text-white block">Sub-Second Signaling</span>
+                <span className="text-surface-400">High-speed Socket.IO gateway</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-surface-800 bg-surface-900/40">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="text-xs">
+                <span className="font-semibold text-white block">Shared Topic Match</span>
+                <span className="text-surface-400">Talk about what you love</span>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Live System Gateways Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BackendStatus />
-        <SocketStatus />
-      </div>
+      {/* Main Content Sections */}
+      <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 space-y-24 pb-20">
+        <HowItWorks />
+        <FeaturesSafety />
 
-      {/* Monorepo Topology Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-slate-800/80 bg-slate-900/60">
-          <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-                <Code2 className="h-4 w-4" />
+        {/* Phase 1 Integration / Architecture Health Banner */}
+        <Card className="border-surface-800 bg-surface-900/70 p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="space-y-1.5 max-w-xl">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-emerald-400" />
+                <Badge variant="success" size="sm">
+                  System Health & Diagnostics
+                </Badge>
               </div>
-              <CardTitle className="text-base">apps/web</CardTitle>
+              <h3 className="text-lg font-bold text-white">Live Gateway & Foundation Status</h3>
+              <p className="text-xs sm:text-sm text-surface-400">
+                Phase 1 backend Express health checks, WebSocket ping/pong latency, and shared
+                contract validation remain fully active.
+              </p>
             </div>
-            <CardDescription>Next.js 15 App Router Frontend</CardDescription>
-          </CardHeader>
-          <CardContent className="text-xs text-slate-400 space-y-2">
-            <p>
-              Tailwind CSS, React 19, accessible component system, and client-side Socket.IO client.
-              Runs completely independently with resilient error states.
-            </p>
-            <div className="pt-2 font-mono text-[11px] text-slate-300">Port: 3000</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800/80 bg-slate-900/60">
-          <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
-                <Server className="h-4 w-4" />
-              </div>
-              <CardTitle className="text-base">apps/server</CardTitle>
-            </div>
-            <CardDescription>Express & Socket.IO Gateway</CardDescription>
-          </CardHeader>
-          <CardContent className="text-xs text-slate-400 space-y-2">
-            <p>
-              REST health check endpoint, environment validation, CORS policies, and real-time
-              WebSocket gateway with ping/pong protocol.
-            </p>
-            <div className="pt-2 font-mono text-[11px] text-slate-300">Port: 4000</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-800/80 bg-slate-900/60">
-          <CardHeader>
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <CardTitle className="text-base">apps/shared</CardTitle>
-            </div>
-            <CardDescription>Shared Types & Validation Contracts</CardDescription>
-          </CardHeader>
-          <CardContent className="text-xs text-slate-400 space-y-2">
-            <p>
-              Zod runtime validation schemas, typed event signatures, health contracts, and socket
-              payloads shared seamlessly between web and server.
-            </p>
-            <div className="pt-2 font-mono text-[11px] text-slate-300">
-              Namespace: @zoopie/shared
-            </div>
-          </CardContent>
+            <Link href="/dev-status">
+              <Button variant="outline" size="md" className="gap-2 shrink-0">
+                <Activity className="h-4 w-4 text-emerald-400" />
+                <span>Open Diagnostic Center</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </Card>
       </div>
-
-      {/* Initial Component System Showcase */}
-      <Card className="border-slate-800 bg-slate-900/60">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Layers className="h-5 w-5 text-primary-400" />
-            <CardTitle>Initial Component System</CardTitle>
-          </div>
-          <CardDescription>
-            Reusable Tailwind CSS component library prepared for the upcoming phases.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              Buttons & States
-            </h4>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button variant="primary" size="sm">
-                Primary Small
-              </Button>
-              <Button variant="primary">Primary Default</Button>
-              <Button variant="secondary">Secondary</Button>
-              <Button variant="outline">Outline</Button>
-              <Button variant="ghost">Ghost</Button>
-              <Button variant="destructive">Destructive</Button>
-              <Button variant="success">Success</Button>
-              <Button variant="primary" isLoading>
-                Loading
-              </Button>
-              <Button variant="primary" disabled>
-                Disabled
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              Badges & Tags
-            </h4>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="default">Default</Badge>
-              <Badge variant="purple">Primary / Purple</Badge>
-              <Badge variant="success">Success Status</Badge>
-              <Badge variant="warning">Warning Alert</Badge>
-              <Badge variant="destructive">Critical Error</Badge>
-              <Badge variant="outline">Border Outline</Badge>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              Live Status Indicators
-            </h4>
-            <div className="flex flex-wrap items-center gap-6 p-4 rounded-lg border border-slate-800 bg-slate-950/60">
-              <StatusIndicator status="online" label="System Online (Pulsing)" />
-              <StatusIndicator status="connecting" label="Negotiating Handshake" />
-              <StatusIndicator status="warning" label="High Latency Warning" />
-              <StatusIndicator status="offline" label="Service Offline" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Phase 1 Acceptance Checklist */}
-      <Card className="border-slate-800 bg-slate-900/60">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-            <CardTitle>Phase 1 Acceptance Verification</CardTitle>
-          </div>
-          <CardDescription>Core criteria completed in this foundational phase.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {[
-              'pnpm monorepo initialized with strict TypeScript configuration',
-              'Next.js 15 App Router app created in apps/web with Tailwind CSS',
-              'Express & Socket.IO server created in apps/server',
-              'Shared types and Zod validation contracts in apps/shared',
-              'Backend GET /health endpoint with uptime and schema validation',
-              'Socket.IO test client connection with Ping/Pong contract',
-              'Vitest configured with server health & socket connection suites',
-              'Playwright configured for end-to-end testing readiness',
-              'Strict environment variable validation and development CORS',
-              'Complete independent frontend and backend operation',
-              'Safe .env.example with no committed secrets',
-              'Comprehensive README and docs/ARCHITECTURE.md specification',
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-950/40 border border-slate-800/50"
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span className="text-slate-300">{item}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

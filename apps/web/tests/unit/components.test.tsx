@@ -7,10 +7,10 @@ import { StatusIndicator } from '../../src/components/ui/status-indicator';
 
 describe('UI Components', () => {
   it('renders Button with correct label and variants', () => {
-    render(<Button variant="primary">Click Me</Button>);
+    render(<Button variant="brand">Click Me</Button>);
     const button = screen.getByRole('button', { name: /click me/i });
     expect(button).toBeDefined();
-    expect(button.className).toContain('bg-primary-600');
+    expect(button.className).toContain('from-brand-600');
   });
 
   it('renders disabled Button when disabled prop is passed', () => {
