@@ -165,7 +165,7 @@ importers:
         specifier: ^26.0.0
         version: 26.1.0(supports-color@8.1.1)
       postcss:
-        specifier: ^8.5.2
+        specifier: ^8.5.31
         version: 8.5.31
       tailwindcss:
         specifier: ^3.4.17
