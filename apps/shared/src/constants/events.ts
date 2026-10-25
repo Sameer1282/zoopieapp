@@ -19,6 +19,15 @@ export const SOCKET_EVENTS = {
   MESSAGE_ACK: 'chat:ack',
   TYPING_INDICATOR: 'chat:typing',
   PEER_TYPING: 'peer:typing',
+
+  // Server-authoritative matchmaking events
+  QUEUE_JOIN: 'matchmaking:join',
+  QUEUE_CANCEL: 'matchmaking:cancel',
+  QUEUE_STATUS: 'matchmaking:status',
+  QUEUE_TIMEOUT: 'matchmaking:timeout',
+  MATCH_FOUND: 'matchmaking:found',
+  MATCH_SKIP: 'matchmaking:skip',
+  MATCH_STOP: 'matchmaking:stop',
 } as const;
 
 export type SocketEventName = (typeof SOCKET_EVENTS)[keyof typeof SOCKET_EVENTS];

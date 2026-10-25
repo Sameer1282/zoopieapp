@@ -12,6 +12,15 @@ import type {
   LeaveMatchPayload,
   MatchEndedPayload,
 } from '../schemas/chat.js';
+import type {
+  QueueJoinPayload,
+  QueueCancelPayload,
+  MatchSkipPayload,
+  MatchStopPayload,
+  QueueStatusPayload,
+  QueueTimeoutPayload,
+  MatchFoundPayload,
+} from '../schemas/matchmaking.js';
 
 export interface ServerToClientEvents {
   pong: (payload: PongPayload) => void;
@@ -23,10 +32,15 @@ export interface ServerToClientEvents {
   'peer:left': (payload: PeerLeftPayload) => void;
   'match:ended': (payload: MatchEndedPayload) => void;
 
-  // Text chat
+  // Real-time text chat
   'chat:message': (payload: ReceiveMessagePayload) => void;
   'chat:ack': (payload: MessageAckPayload) => void;
   'peer:typing': (payload: PeerTypingPayload) => void;
+
+  // Server-authoritative matchmaking
+  'matchmaking:status': (payload: QueueStatusPayload) => void;
+  'matchmaking:found': (payload: MatchFoundPayload) => void;
+  'matchmaking:timeout': (payload: QueueTimeoutPayload) => void;
 }
 
 export interface ClientToServerEvents {
@@ -36,9 +50,15 @@ export interface ClientToServerEvents {
   'match:join': (payload: JoinMatchPayload) => void;
   'match:leave': (payload: LeaveMatchPayload) => void;
 
-  // Text chat
+  // Real-time text chat
   'chat:send': (payload: SendMessagePayload) => void;
   'chat:typing': (payload: TypingIndicatorPayload) => void;
+
+  // Server-authoritative matchmaking
+  'matchmaking:join': (payload: QueueJoinPayload) => void;
+  'matchmaking:cancel': (payload: QueueCancelPayload) => void;
+  'matchmaking:skip': (payload: MatchSkipPayload) => void;
+  'matchmaking:stop': (payload: MatchStopPayload) => void;
 }
 
 export interface InterServerEvents {

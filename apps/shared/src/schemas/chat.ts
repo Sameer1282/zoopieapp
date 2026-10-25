@@ -77,6 +77,7 @@ export const MatchEndedPayloadSchema = z.object({
     'reported',
     'timeout',
     'manual',
+    'skip',
   ]),
 });
 

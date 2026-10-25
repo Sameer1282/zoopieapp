@@ -116,9 +116,12 @@ Zoopie is engineered so that frontend and backend developers can work autonomous
 
 ---
 
-## 6. Future Phase Roadmap
+## 6. Implementation Status & Roadmap
 
-- **Phase 2 — Matchmaking & Pairing Engine**: Redis/in-memory session queue, preference matching, and pairing state machine.
-- **Phase 3 — WebRTC Media Pipeline**: STUN/TURN server configuration, ICE candidate exchange, offer/answer SDP signaling, peer video/audio stream rendering.
-- **Phase 4 — Real-Time Text Chat & Moderation**: Ephemeral encrypted messaging, presence detection, client-side profanity filtering.
-- **Phase 5 — Production Hardening & Observability**: Structured JSON logging, Prometheus metrics, rate limiting, and Docker containerization.
+- **Phase 1 — Project Foundation & Architecture**: Complete. Monorepo, strict TypeScript, Next.js App Router, Express, Socket.IO gateway, shared contracts, and Vitest suite.
+- **Phase 2 — Design System & Landing Page**: Complete. Zoopie brand identity, custom SVG wordmark, responsive landing page, design tokens, accessible UI component primitives, Safety/Privacy/Terms foundations.
+- **Phase 3 — Database, API Contracts & Security Baseline**: Complete. PostgreSQL Prisma schema, opaque identifiers, migration guide, centralized error handling, security headers, rate limiting, and redacting logger.
+- **Phase 4 — Real-Time Socket Layer & Text Chat**: Complete. Typed Socket.IO event contracts, room isolation, message length & rate limiting, XSS-immune plain text rendering, and ephemeral in-memory relay (zero chat persistence).
+- **Phase 5 — Server-Authoritative Matchmaking**: Complete. Separate queues by mode (text/video), optional interest matching with documented fallback relaxation, self-matching & duplicate match prevention, block exclusion, atomic concurrency safety, skip/stop flows, stale event guards, honest UI states (`idle`, `searching`, `waiting`, `matched`, `connecting`, `connected`, `skipping`, `stopping`, `error`), and `IMatchmakingQueue` architecture.
+- **Phase 6 — WebRTC Audio/Video Signaling & Media Pipeline**: STUN/TURN server configuration, ICE candidate exchange, offer/answer SDP signaling, local/remote stream rendering, camera/microphone permission handling.
+- **Phase 7 — Abuse Reporting & Moderation Engine**: Reporting workflows, automated content flags, moderator dashboard, session suspension enforcement.

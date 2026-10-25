@@ -28,7 +28,7 @@ import {
   Mic,
   Wifi,
   Construction,
-  FlaskConical,
+  Zap,
 } from 'lucide-react';
 
 function ChatSetupContent() {
@@ -36,6 +36,7 @@ function ChatSetupContent() {
   const router = useRouter();
 
   const mode = (searchParams.get('mode') === 'text' ? 'text' : 'video') as 'video' | 'text';
+  const hasCustomRoom = Boolean(searchParams.get('room'));
   const customRoom = searchParams.get('room') || 'dev-match-room-1';
   const rawInterests = searchParams.get('interests') || '';
   const interests = rawInterests
@@ -116,8 +117,8 @@ function ChatSetupContent() {
         <div className="flex items-center gap-2">
           {mode === 'text' && (
             <Badge variant="teal" size="sm" className="gap-1">
-              <FlaskConical className="h-3 w-3" />
-              <span>Phase 4 Live Chat</span>
+              <Zap className="h-3 w-3" />
+              <span>Phase 5 Matchmaking</span>
             </Badge>
           )}
           <Badge variant={mode === 'video' ? 'brand' : 'teal'}>
@@ -132,7 +133,8 @@ function ChatSetupContent() {
           <TextChatInterface
             initialMatchId={customRoom}
             interests={interests}
-            isDevFixture={true}
+            isDevFixture={hasCustomRoom}
+            autoStartSearch={!hasCustomRoom}
           />
         </div>
       ) : (
