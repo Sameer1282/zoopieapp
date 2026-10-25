@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/loading-indicator';
 import { StatusIndicator } from '@/components/ui/status-indicator';
+import { TextChatInterface } from '@/components/chat/text-chat-interface';
 import { io, type Socket } from 'socket.io-client';
 import { config } from '@/lib/config';
 import {
@@ -27,6 +28,7 @@ import {
   Mic,
   Wifi,
   Construction,
+  FlaskConical,
 } from 'lucide-react';
 
 function ChatSetupContent() {
@@ -34,13 +36,14 @@ function ChatSetupContent() {
   const router = useRouter();
 
   const mode = (searchParams.get('mode') === 'text' ? 'text' : 'video') as 'video' | 'text';
+  const customRoom = searchParams.get('room') || 'dev-match-room-1';
   const rawInterests = searchParams.get('interests') || '';
   const interests = rawInterests
     .split(',')
     .map(t => t.trim())
     .filter(Boolean);
 
-  // Device permissions state
+  // Device permissions state (video mode)
   const [testingMedia, setTestingMedia] = useState(false);
   const [mediaGranted, setMediaGranted] = useState<boolean | null>(null);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -90,7 +93,6 @@ function ChatSetupContent() {
         audio: true,
       });
       setMediaGranted(true);
-      // Clean up tracks immediately
       stream.getTracks().forEach(track => track.stop());
     } catch (err: unknown) {
       setMediaGranted(false);
@@ -101,8 +103,8 @@ function ChatSetupContent() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8 space-y-8">
-      {/* Top Navigation */}
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      {/* Top Breadcrumb Navigation */}
       <div className="flex items-center justify-between">
         <Link
           href="/"
@@ -111,72 +113,77 @@ function ChatSetupContent() {
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Home</span>
         </Link>
-        <Badge variant={mode === 'video' ? 'brand' : 'teal'}>
-          {mode === 'video' ? 'Video Chat Mode' : 'Text Chat Mode'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          {mode === 'text' && (
+            <Badge variant="teal" size="sm" className="gap-1">
+              <FlaskConical className="h-3 w-3" />
+              <span>Phase 4 Live Chat</span>
+            </Badge>
+          )}
+          <Badge variant={mode === 'video' ? 'brand' : 'teal'}>
+            {mode === 'video' ? 'Video Mode' : 'Text Chat Active'}
+          </Badge>
+        </div>
       </div>
 
-      {/* Mode & Configuration Summary Card */}
-      <Card className="border-surface-700 bg-surface-900/90 shadow-2xl space-y-6">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${
-                mode === 'video'
-                  ? 'bg-brand-500/15 text-brand-300 border-brand-500/30'
-                  : 'bg-teal-500/15 text-teal-300 border-teal-500/30'
-              }`}
-            >
-              {mode === 'video' ? (
+      {/* Render Text Chat Interface for Text Mode */}
+      {mode === 'text' ? (
+        <div className="space-y-4">
+          <TextChatInterface
+            initialMatchId={customRoom}
+            interests={interests}
+            isDevFixture={true}
+          />
+        </div>
+      ) : (
+        /* Video Mode: Honest Staged Notice & Device Check */
+        <Card className="border-surface-700 bg-surface-900/90 shadow-2xl space-y-6">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border bg-brand-500/15 text-brand-300 border-brand-500/30">
                 <Video className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl sm:text-2xl">Camera & Audio Setup</CardTitle>
+                <CardDescription>
+                  Review your session settings before entering the matchmaking queue.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Selected Interests */}
+            <div className="space-y-2 rounded-xl border border-surface-800 bg-surface-950/60 p-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-surface-300 flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-brand-400" />
+                  <span>Selected Topic Preferences</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => router.push('/')}
+                  className="text-brand-400 hover:text-brand-300 font-medium text-[11px]"
+                >
+                  Edit on Home
+                </button>
+              </div>
+              {interests.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {interests.map(t => (
+                    <Badge key={t} variant="brand" size="sm">
+                      #{t}
+                    </Badge>
+                  ))}
+                </div>
               ) : (
-                <MessageSquare className="h-6 w-6" />
+                <p className="text-xs text-surface-500 italic">
+                  No specific topics selected. You will be matched with any available partner.
+                </p>
               )}
             </div>
-            <div>
-              <CardTitle className="text-xl sm:text-2xl">
-                {mode === 'video' ? 'Camera & Audio Setup' : 'Text Conversation Setup'}
-              </CardTitle>
-              <CardDescription>
-                Review your session settings before entering the matchmaking queue.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Selected Interests */}
-          <div className="space-y-2 rounded-xl border border-surface-800 bg-surface-950/60 p-4">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-semibold text-surface-300 flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-brand-400" />
-                <span>Selected Topic Preferences</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => router.push('/')}
-                className="text-brand-400 hover:text-brand-300 font-medium text-[11px]"
-              >
-                Edit on Home
-              </button>
-            </div>
-            {interests.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {interests.map(t => (
-                  <Badge key={t} variant="brand" size="sm">
-                    #{t}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-surface-500 italic">
-                No specific topics selected. You will be matched with any available partner.
-              </p>
-            )}
-          </div>
-
-          {/* Media Permission Test (for Video Mode) */}
-          {mode === 'video' && (
+            {/* Media Permission Test */}
             <div className="space-y-3 rounded-xl border border-surface-800 bg-surface-950/60 p-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -184,7 +191,7 @@ function ChatSetupContent() {
                     Device Permission Check
                   </span>
                   <span className="text-xs text-surface-400">
-                    Verify camera and microphone access before matchmaking begins.
+                    Verify camera and microphone access before WebRTC pairing.
                   </span>
                 </div>
                 <Button
@@ -213,73 +220,71 @@ function ChatSetupContent() {
                 </div>
               )}
             </div>
-          )}
 
-          {/* Real-time Gateway Health Check */}
-          <div className="flex items-center justify-between rounded-xl border border-surface-800 bg-surface-950/60 p-3.5">
-            <div className="flex items-center gap-3">
-              <Wifi className="h-4 w-4 text-surface-400" />
-              <div className="text-xs">
-                <span className="font-semibold text-surface-200 block">Signaling Gateway</span>
-                <span className="text-surface-400 font-mono text-[11px]">{config.socketUrl}</span>
+            {/* Real-time Gateway Health Check */}
+            <div className="flex items-center justify-between rounded-xl border border-surface-800 bg-surface-950/60 p-3.5">
+              <div className="flex items-center gap-3">
+                <Wifi className="h-4 w-4 text-surface-400" />
+                <div className="text-xs">
+                  <span className="font-semibold text-surface-200 block">Signaling Gateway</span>
+                  <span className="text-surface-400 font-mono text-[11px]">{config.socketUrl}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusIndicator
+                  status={
+                    socketStatus === 'connected'
+                      ? 'online'
+                      : socketStatus === 'connecting'
+                        ? 'connecting'
+                        : 'offline'
+                  }
+                  label={
+                    socketStatus === 'connected'
+                      ? `Connected (${socketId?.slice(0, 6)}...)`
+                      : socketStatus === 'connecting'
+                        ? 'Connecting...'
+                        : 'Gateway Offline'
+                  }
+                />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <StatusIndicator
-                status={
-                  socketStatus === 'connected'
-                    ? 'online'
-                    : socketStatus === 'connecting'
-                      ? 'connecting'
-                      : 'offline'
-                }
-                label={
-                  socketStatus === 'connected'
-                    ? `Connected (${socketId?.slice(0, 6)}...)`
-                    : socketStatus === 'connecting'
-                      ? 'Connecting...'
-                      : 'Gateway Offline'
-                }
-              />
-            </div>
-          </div>
 
-          {/* Honest Development / Staged State Notice */}
-          <Alert
-            variant="info"
-            title="Phase 2 Staging Notice — Matchmaking Queue Staged for Phase 3"
-          >
-            <div className="space-y-1.5">
-              <p>
-                You have reached the verified <strong>{mode.toUpperCase()}</strong> setup route. In
-                accordance with the Phase 2 specification, we do not fake matches or simulate
-                fictitious partners.
-              </p>
-              <p className="text-surface-300">
-                The automatic matchmaking queue engine, pairing state machine, and WebRTC peer
-                signaling exchange are being implemented in <strong>Phase 3</strong>.
-              </p>
-            </div>
-          </Alert>
-        </CardContent>
+            {/* Video Mode Notice */}
+            <Alert variant="info" title="Video Chat Pipeline Scheduled for Phase 5">
+              <div className="space-y-2">
+                <p>
+                  Phase 4 implements the <strong>real-time text chat engine</strong>. Full WebRTC
+                  audio/video peer stream negotiation is being completed in the upcoming phase.
+                </p>
+                <Link href="/chat?mode=text">
+                  <Button variant="teal" size="sm" className="mt-1 gap-1.5 font-bold">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>Try Real-Time Text Chat Now</span>
+                  </Button>
+                </Link>
+              </div>
+            </Alert>
+          </CardContent>
 
-        <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          <Link href="/" className="w-full sm:w-auto">
-            <Button variant="outline" className="w-full sm:w-auto">
-              Change Mode or Interests
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2 text-xs text-surface-500">
-            <Construction className="h-3.5 w-3.5 text-amber-400" />
-            <span>Matchmaking pipeline scheduled for Phase 3</span>
-          </div>
-        </CardFooter>
-      </Card>
+          <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <Link href="/" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto">
+                Change Mode or Interests
+              </Button>
+            </Link>
+            <div className="flex items-center gap-2 text-xs text-surface-500">
+              <Construction className="h-3.5 w-3.5 text-amber-400" />
+              <span>WebRTC media pipeline scheduled for Phase 5</span>
+            </div>
+          </CardFooter>
+        </Card>
+      )}
     </div>
   );
 }
 
-export default function ChatSetupPage() {
+export default function ChatPage() {
   return (
     <Suspense
       fallback={

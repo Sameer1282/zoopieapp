@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { CreateSessionRequestSchema } from '@zoopie/shared';
 import { ValidationError } from '../utils/errors.js';
-import { prisma } from '../db/client.js';
+import { prisma, withDbTimeout } from '../db/client.js';
 import { logger } from '../utils/logger.js';
 import crypto from 'node:crypto';
 
@@ -26,13 +26,15 @@ sessionsRouter.post('/api/sessions', async (req: Request, res: Response, next: N
     const createdAt = new Date();
 
     try {
-      await prisma.userSession.create({
-        data: {
-          id: sessionId,
-          fingerprintHash,
-          status: 'ACTIVE',
-        },
-      });
+      await withDbTimeout(
+        prisma.userSession.create({
+          data: {
+            id: sessionId,
+            fingerprintHash,
+            status: 'ACTIVE',
+          },
+        })
+      );
     } catch (dbError) {
       logger.warn('Database write bypassed for user session (DB offline or unreachable)', {
         error: dbError instanceof Error ? dbError.message : 'Unknown DB error',

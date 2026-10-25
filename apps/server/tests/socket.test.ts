@@ -46,14 +46,14 @@ describe('Socket.IO Connection and Ping/Pong Test', () => {
       clientSocket = Client(`http://localhost:${port}`, {
         transports: ['websocket'],
         autoConnect: true,
+        forceNew: true,
       });
 
-      clientSocket.on('connect', () => {
+      const sendPing = () => {
         expect(clientSocket.connected).toBe(true);
-
         const now = Date.now();
         clientSocket.emit(SOCKET_EVENTS.PING, { clientTimestamp: now, nonce: 'test-123' });
-      });
+      };
 
       clientSocket.on(SOCKET_EVENTS.PONG, payload => {
         try {
@@ -71,5 +71,11 @@ describe('Socket.IO Connection and Ping/Pong Test', () => {
       clientSocket.on('connect_error', err => {
         reject(err);
       });
+
+      if (clientSocket.connected) {
+        sendPing();
+      } else {
+        clientSocket.on('connect', sendPing);
+      }
     }));
 });

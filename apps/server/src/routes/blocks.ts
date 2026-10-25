@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { CreateBlockRequestSchema } from '@zoopie/shared';
 import { ValidationError } from '../utils/errors.js';
-import { prisma } from '../db/client.js';
+import { prisma, withDbTimeout } from '../db/client.js';
 import { logger } from '../utils/logger.js';
 import crypto from 'node:crypto';
 
@@ -20,13 +20,15 @@ blocksRouter.post('/api/blocks', async (req: Request, res: Response, next: NextF
     const createdAt = new Date();
 
     try {
-      const created = await prisma.userBlock.create({
-        data: {
-          blockerSessionId,
-          blockedFingerprint,
-          reason,
-        },
-      });
+      const created = await withDbTimeout(
+        prisma.userBlock.create({
+          data: {
+            blockerSessionId,
+            blockedFingerprint,
+            reason,
+          },
+        })
+      );
       blockId = created.id;
     } catch (dbError) {
       logger.warn('Database write bypassed for user block (DB offline or unreachable)', {

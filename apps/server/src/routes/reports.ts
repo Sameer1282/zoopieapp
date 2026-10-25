@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { CreateReportRequestSchema } from '@zoopie/shared';
 import { ValidationError } from '../utils/errors.js';
-import { prisma } from '../db/client.js';
+import { prisma, withDbTimeout } from '../db/client.js';
 import { logger } from '../utils/logger.js';
 import crypto from 'node:crypto';
 
@@ -21,16 +21,18 @@ reportsRouter.post('/', async (req: Request, res: Response, next: NextFunction) 
     const createdAt = new Date();
 
     try {
-      const created = await prisma.abuseReport.create({
-        data: {
-          reporterSessionId,
-          reportedFingerprint,
-          conversationId,
-          category,
-          details,
-          status: 'PENDING',
-        },
-      });
+      const created = await withDbTimeout(
+        prisma.abuseReport.create({
+          data: {
+            reporterSessionId,
+            reportedFingerprint,
+            conversationId,
+            category,
+            details,
+            status: 'PENDING',
+          },
+        })
+      );
       reportId = created.id;
     } catch (dbError) {
       logger.warn('Database write bypassed for abuse report (DB offline or unreachable)', {
